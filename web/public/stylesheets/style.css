@@ -1,0 +1,47 @@
+body {
+  /*padding: 50px;*/
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background: #EEE;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.file-select {
+  border-top: solid 1px #BBB;
+  border-left: solid 1px #BBB;
+  border-bottom: solid 1px #FFF;
+  border-right: solid 1px #FFF;
+  background: #FFF;
+  overflow: scroll;
+  padding: 5px;
+  border: 2px solid #ccc;
+  height: 520px;
+}
+
+.file-select .title {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+.file-select .title span {
+  text-decoration: none;
+  border-bottom: 1px solid;
+  font-weight: normal;
+}
+
+.show-video {
+  height: 400px;
+}
+
+.video-js {
+  width: 100% !important;
+  height: auto !important;
+}
+
+#showPath {
+  padding-bottom: 10px;
+}

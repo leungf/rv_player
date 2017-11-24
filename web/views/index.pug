@@ -1,0 +1,74 @@
+extends layout
+
+block stylesheets
+  link(href="http://vjs.zencdn.net/6.2.8/video-js.css" rel="stylesheet")
+  link(rel='stylesheet', href='/vendor/jqueryfiletree-2.1.5/dist/jQueryFileTree.min.css')
+  // link(rel='stylesheet', href='/vendor/jqueryFileTree/jqueryFileTree.css')
+
+block content
+
+  div(class="container")
+    h1 Self Video Player
+    h5 Root Path: <span> #{dirRoot} <span>
+    div(class="row")
+      div(class="file-select col-lg-3 col-md-3")
+        p(class="title") Get the movie from &nbsp;
+        div(id="getDir")
+
+      div(class="right col-lg-9 col-md-9")
+        div(id="showPath" class="row")
+          div(class="col-lg-12")
+            div(class="input-group")
+              if fPath
+                input(class="form-control" type="text" disabled="disabled" value=fPath)
+              else
+                input(class="form-control" type="text" disabled="disabled")
+              span(class="input-group-btn")
+                button(class="btn btn-primary") Load
+        video(id="mvideo" class="video-js vjs-default-skin vjs-big-play-centered")
+          p(class="vjs-no-js")
+            To view this video please enable JavaScript, and consider upgrading to a web browser that
+            a(href="http://videojs.com/html5-video-support/" target="_blank") supports HTML5 video
+
+block scripts
+  script(src="http://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js")
+  script(src="http://vjs.zencdn.net/6.2.8/video.js")
+  script(src="/vendor/jqueryfiletree-2.1.5/dist/jQueryFileTree.min.js")
+  // script(src="/vendor/jqueryFileTree/jqueryFileTree.js")
+
+  script.
+    $(document).ready( function() {
+      var mplayer = videojs('mvideo', {
+        controls: true,
+        autoplay: false,
+        preload: 'auto',
+        fluid: true,
+      });
+      $('#getDir').fileTree({
+        root: '#{dirRoot}/',
+        script: '/getDirList',
+        multiSelect: false,
+      }, function(file) {
+        // console.log(file)
+        $('#showPath input').val(file)
+      });
+      // create soft link on server and return the file path
+      // set the online file path as source
+      $("#showPath button").click(function() {
+        var remote_video_path = $("#showPath input").val();
+        // console.log(remote_video_path);
+        // reset current movies
+        mplayer.reset();
+        $.post('/loadMovie', {path:remote_video_path}, function(data) {
+          if (data.status == 1) {
+            mplayer.src({
+              src: data.video_path,
+              type: 'video/mp4'
+            });
+            mplayer.play({autoplay:true});
+          } else {
+            console.log(data.message)
+          }
+        });
+      })
+    });
