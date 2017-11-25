@@ -36,7 +36,7 @@ def run(infile, outfile):
         .output(outfile,
                 y='',
                 vcodec='libx264', preset='medium', profile='high', s='1280x720', max_muxing_queue_size='1000',
-                crf='36',
+                maxrate='650K', crf='23', bufsize='1M',
                 acodec='libfdk_aac', ac='2', ar='44100', ab='64k')
     )
     logger.info("Run ffmpeg {}".format(
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', dest='outPath', required=True,
                         help='output Path to store the converted files.')
     parser.add_argument('-t', dest='type', default="mp4",
-                        help='type of the movies, default: mp4.')
+                        help='type of the converted movies, default: mp4.')
 
     args = parser.parse_args()
 
@@ -60,12 +60,16 @@ if __name__ == '__main__':
     outp = os.path.abspath(args.outPath)
     print "input path: {} output path: {}".format(inp, outp)
     if inp == outp:
-        print("Input path and output path can not be equal.")
+        print("input path and output path can not be equal.")
         sys.exit(-1)
     if os.path.isfile(inp):
         input_path = inp
         filename = os.path.basename(input_path)
+        parts = filename.lower().split('.')
+        parts[-1] = args.type
+        filename = '.'.join(parts)
         output_path = os.path.join(outp, filename)
+        logger.info("convert to: %s", output_path)
         run(input_path, output_path)
     else:
         files = list_files(inp, args.type)
@@ -75,8 +79,11 @@ if __name__ == '__main__':
             filename = os.path.basename(output_path)
             filedir = os.path.dirname(output_path)
             filename = os.path.basename(output_path)
-            filename = filename.lower().replace('.' + args.type, '.mp4')
-            output_path = os.path.join(filedir, filename)
 
-            print output_path
+            parts = filename.lower().split('.')
+            parts[-1] = args.type
+            filename = '.'.join(parts)
+            output_path = os.path.join(outp, filename)
+
+            logger.info("convert to: %s", output_path)
             run(input_path, output_path)

@@ -45,3 +45,13 @@ a {
 #showPath {
   padding-bottom: 10px;
 }
+
+.video-control .btn {
+  margin-top: 10px;
+  width: 200px;
+}
+
+.video-control input {
+  display: inline-block;
+  padding: 6px 12px;
+}

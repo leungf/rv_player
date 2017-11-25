@@ -25,14 +25,23 @@ block content
                 input(class="form-control" type="text" disabled="disabled")
               span(class="input-group-btn")
                 button(class="btn btn-primary") Load
-        video(id="mvideo" class="video-js vjs-default-skin vjs-big-play-centered")
-          p(class="vjs-no-js")
-            To view this video please enable JavaScript, and consider upgrading to a web browser that
-            a(href="http://videojs.com/html5-video-support/" target="_blank") supports HTML5 video
+        div(class="video-wrapper")
+          video(id="mvideo" class="video-js vjs-default-skin vjs-big-play-centered")
+            p(class="vjs-no-js")
+              To view this video please enable JavaScript, and consider upgrading to a web browser that
+              a(href="http://videojs.com/html5-video-support/" target="_blank") supports HTML5 video
+          div(class="video-control")
+            <button class="btn btn-default previous">Previous</button>
+            <button class="btn btn-default next">Next</button>
+            <div class="btn-group">
+              <span class=""><input type="radio" name="autoadvance" value="n"> No Auto-advance </span>
+              <span class=""><input type="radio" name="autoadvance" value="y"> Auto-advance </span>
+            </div>
 
 block scripts
   script(src="http://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js")
   script(src="http://vjs.zencdn.net/6.2.8/video.js")
+  script(src="/vendor/videojs-playlist-4.0.2/dist/videojs-playlist.min.js")
   script(src="/vendor/jqueryfiletree-2.1.5/dist/jQueryFileTree.min.js")
   // script(src="/vendor/jqueryFileTree/jqueryFileTree.js")
 
@@ -49,26 +58,70 @@ block scripts
         script: '/getDirList',
         multiSelect: false,
       }, function(file) {
-        // console.log(file)
         $('#showPath input').val(file)
+      }).on('filetreeexpand', function(e, data) {
+        $('#showPath input').val(data.rel);
       });
-      // create soft link on server and return the file path
-      // set the online file path as source
+
+      // videojs can only play the online video service, so do it.
       $("#showPath button").click(function() {
         var remote_video_path = $("#showPath input").val();
         // console.log(remote_video_path);
         // reset current movies
+        var mplayer = videojs('mvideo');
         mplayer.reset();
+        $('.video-control').hide();
+
         $.post('/loadMovie', {path:remote_video_path}, function(data) {
+          console.log(data);
           if (data.status == 1) {
             mplayer.src({
-              src: data.video_path,
+              src: data.video,
               type: 'video/mp4'
             });
             mplayer.play({autoplay:true});
+          } else if (data.status==2) {
+            playlist = []
+            for (m of data.videos) {
+              playlist.push({
+                sources: [{
+                  src: m,
+                  type: 'video/mp4'
+                }]
+              })
+            }
+            console.log(playlist);
+            mplayer.playlist(playlist);
+
+            // Play through the playlist automatically.
+            mplayer.play({autoplay:true});
+
+            // Play control
+            $('.video-control').show();
+            $('.video-control .previous').click(function() {
+              mplayer.playlist.previous();
+            });
+
+            $('.video-control .next').click(function() {
+              mplayer.playlist.next();
+            });
+
+            $('input[name=autoadvance]').click(function() {
+              if ($(this).val() == 'y')  {
+                mplayer.playlist.autoadvance(0);
+              } else {
+                mplayer.playlist.autoadvance(null);
+              }
+            });
+            $('input[name=autoadvance][value=n]').click();
           } else {
             console.log(data.message)
           }
         });
-      })
+      });
+
+      var fPath = "#{fPath}";
+      if (fPath!="") {
+        $("#showPath button").click();
+      }
     });
