@@ -25,6 +25,7 @@ block content
                 input(class="form-control" type="text" disabled="disabled")
               span(class="input-group-btn")
                 button(class="btn btn-primary") Load
+        h3(class="video-title")
         div(class="video-wrapper")
           video(id="mvideo" class="video-js vjs-default-skin vjs-big-play-centered")
             p(class="vjs-no-js")
@@ -75,8 +76,11 @@ block scripts
         $.post('/loadMovie', {path:remote_video_path}, function(data) {
           console.log(data);
           if (data.status == 1) {
+            var m = data.video;
+            $('.video-title').html(m.name);
             mplayer.src({
-              src: data.video,
+              name: m.name,
+              src: m.src,
               type: 'video/mp4'
             });
             mplayer.play({autoplay:true});
@@ -85,16 +89,31 @@ block scripts
             for (m of data.videos) {
               playlist.push({
                 sources: [{
-                  src: m,
+                  name: m.name,
+                  src: m.src,
                   type: 'video/mp4'
                 }]
               })
             }
-            console.log(playlist);
             mplayer.playlist(playlist);
+            mplayer.on('beforeplaylistitem', function(html, el) {
+              if (el.sources.length) {
+                var name = el.sources[0].name;
+                $('.video-title').html(name);
+              } else {
+                $('.video-title').html('');
+              }
+            });
 
+            mplayer.playlist.currentItem(0);
+            if (playlist.length) {
+              var name = playlist[0].sources[0].name;
+              $('.video-title').html(name);
+            } else {
+              $('.video-title').html('');
+            }
             // Play through the playlist automatically.
-            mplayer.play({autoplay:true});
+            mplayer.play();
 
             // Play control
             $('.video-control').show();

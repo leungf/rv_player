@@ -91,7 +91,10 @@ var _loadMovie = async function(request, response) {
     if (!_ret.status)
       throw new Error(_ret.message);
     ret.status = 1;
-    ret.video = path.join('/videoLinks', relative_file_path);
+    ret.video = {
+      name: path.basename(relative_file_path),
+      src: path.join('/videoLinks', relative_file_path),
+    }
   } else if (stats.isDirectory()) {
     // currently, not support recursively loading the movies
     var files = fs.readdirSync(full_file_path);
@@ -114,7 +117,10 @@ var _loadMovie = async function(request, response) {
           _ret = _linkFileSync(original_base_path, symlink_base_path, relative_file_path);
         }
         if (_ret && _ret.status) {
-          relative_files.push(path.join('/videoLinks', relative_file_path));
+          relative_files.push({
+            name: path.basename(relative_file_path),
+            src: path.join('/videoLinks', relative_file_path),
+          });
         }
       }
     });
@@ -124,7 +130,7 @@ var _loadMovie = async function(request, response) {
     ret.message = "failed due to directory can not be load. set the movie file."
   }
 
-  // update the session 
+  // update the session
   if (ret.status != 0) {
     request.session.fpath = full_file_path;
   }
