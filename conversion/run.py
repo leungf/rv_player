@@ -39,6 +39,8 @@ def loop():
             mcdbc.insert(e)
         else:
             e = mcdbc.find_one({"name": torr.name})
+            if e["status"] == "downloading" and torr.status != "downloading":
+                e = mcdbc.find_and_modify({"name": torr.name}, {"$set": {"status": torr.status}})
 
         if e["status"] == "seeding":
             # convert the movies
@@ -47,12 +49,6 @@ def loop():
             mcdbc.update({"name": torr.name}, {"$set": {"status": "converting"}})
             ffmpeg_helper.convert(_from_dir, _target_dir)
             mcdbc.update({"name": torr.name}, {"$set": {"status": "converted"}})
-        elif e["status"] == "downloading":
-            pass
-        elif e["status"] == "converted":
-            pass
-        elif e["status"] == "converting":
-            pass
         else:
             logger.error("some error")
 
