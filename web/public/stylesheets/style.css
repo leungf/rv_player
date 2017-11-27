@@ -27,10 +27,14 @@ a {
   display: inline-block;
 }
 
-.file-select .title span {
+.file-select .title {
   text-decoration: none;
-  border-bottom: 1px solid;
   font-weight: normal;
+}
+
+.file-select .title .refresh {
+  cursor: pointer;
+  padding-right: 10px;
 }
 
 .video-title {

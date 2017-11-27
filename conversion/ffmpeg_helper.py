@@ -6,23 +6,23 @@ import ffmpeg
 import os
 import sys
 import logging
-import ffmpeg
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def list_files(rootDir, suffix):
+def list_files(rootDir, exts):
     files = []
     for dirName, subdirList, fileList in os.walk(rootDir):
         for fname in fileList:
-            if fname.lower().endswith(suffix):
+            _ext = fname.lower().split('.')[-1]
+            if _ext in exts:
                 files.append(os.path.join(dirName, fname))
 
     return files
 
 
-def run(infile, outfile):
+def convert_file_to_file(infile, outfile):
     if not os.path.exists(infile):
         logger.error("%s not exist.", infile)
 
@@ -39,11 +39,34 @@ def run(infile, outfile):
                 maxrate='650K', crf='23', bufsize='1M',
                 acodec='libfdk_aac', ac='2', ar='44100', ab='64k')
     )
-    logger.info("Run ffmpeg {}".format(
-        [e.decode('utf-8') for e in stream.get_args()]
-    ))
+    # logger.info("Run ffmpeg {}".format(
+    #     [e.decode('utf-8') for e in stream.get_args()]
+    # ))
     stream.run()
 
+def convert_file_to_dir(from_path, to_dir, exts=["mkv", "mp4"]):
+    filename = os.path.basename(from_path)
+    parts = filename.lower().split('.')
+    if parts[-1] in exts:
+        parts[-1] = 'mp4'
+        filename = '.'.join(parts)
+        output_path = os.path.join(to_dir, filename)
+        logger.info("convert to: %s", output_path)
+        convert_file_to_file(from_path, output_path)
+
+def convert_dir_to_dir(from_path, to_dir, exts=["mkv", "mp4"]):
+    files = list_files(from_path, exts)
+    d_len = len(from_path)
+    for input_path in files:
+        output_path = os.path.join(to_dir, input_path[d_len + 1:])
+        target_dir = os.path.dirname(output_path)
+        convert_file_to_dir(input_path, target_dir)
+
+def convert(from_path, output_dir):
+    if os.path.isfile(from_path):
+        convert_file_to_dir(from_path, output_dir)
+    else:
+        convert_dir_to_dir(from_path, output_dir)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Ffmpeg Helper.')
@@ -62,28 +85,4 @@ if __name__ == '__main__':
     if inp == outp:
         print("input path and output path can not be equal.")
         sys.exit(-1)
-    if os.path.isfile(inp):
-        input_path = inp
-        filename = os.path.basename(input_path)
-        parts = filename.lower().split('.')
-        parts[-1] = args.type
-        filename = '.'.join(parts)
-        output_path = os.path.join(outp, filename)
-        logger.info("convert to: %s", output_path)
-        run(input_path, output_path)
-    else:
-        files = list_files(inp, args.type)
-        d_len = len(inp)
-        for input_path in files:
-            output_path = os.path.join(outp, input_path[d_len + 1:])
-            filename = os.path.basename(output_path)
-            filedir = os.path.dirname(output_path)
-            filename = os.path.basename(output_path)
-
-            parts = filename.lower().split('.')
-            parts[-1] = args.type
-            filename = '.'.join(parts)
-            output_path = os.path.join(outp, filename)
-
-            logger.info("convert to: %s", output_path)
-            run(input_path, output_path)
+    convert(inp, outp)

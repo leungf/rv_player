@@ -4,6 +4,7 @@ block stylesheets
   link(href="http://vjs.zencdn.net/6.2.8/video-js.css" rel="stylesheet")
   link(rel='stylesheet', href='/vendor/jqueryfiletree-2.1.5/dist/jQueryFileTree.min.css')
   // link(rel='stylesheet', href='/vendor/jqueryFileTree/jqueryFileTree.css')
+  link(href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css", rel="stylesheet", integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN", crossorigin="anonymous")
 
 block content
 
@@ -12,7 +13,10 @@ block content
     h5 Root Path: <span> #{dirRoot} <span>
     div(class="row")
       div(class="file-select col-lg-3 col-md-3")
-        p(class="title") Get the movie from &nbsp;
+        div(class="title")
+          span(class="refresh")
+            i(class="fa fa-refresh" aria-hidden="true")
+          | Get the movie from &nbsp;
         div(id="getDir")
 
       div(class="right col-lg-9 col-md-9")
@@ -42,8 +46,10 @@ block content
 block scripts
   script(src="http://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js")
   script(src="http://vjs.zencdn.net/6.2.8/video.js")
+  script(src="//cdn.sc.gl/videojs-hotkeys/0.2/videojs.hotkeys.min.js")
   script(src="/vendor/videojs-playlist-4.0.2/dist/videojs-playlist.min.js")
   script(src="/vendor/jqueryfiletree-2.1.5/dist/jQueryFileTree.min.js")
+  // script(src="/vendor/jqueryfiletree-2.1.5/src/jQueryFileTree.js")
   // script(src="/vendor/jqueryFileTree/jqueryFileTree.js")
 
   script.
@@ -53,7 +59,14 @@ block scripts
         autoplay: false,
         preload: 'auto',
         fluid: true,
+      }).ready(function() {
+        this.hotkeys({
+          volumeStep: 0.1,
+          seekStep: 5,
+          enableModifiersForNumbers: false
+        });
       });
+
       $('#getDir').fileTree({
         root: '#{dirRoot}/',
         script: '/getDirList',
@@ -62,7 +75,19 @@ block scripts
         $('#showPath input').val(file)
       }).on('filetreeexpand', function(e, data) {
         $('#showPath input').val(data.rel);
+      }).on('filetreeinitiated', function() {
+        $('.file-select .title .refresh i').attr('class', 'fa fa-refresh');
       });
+
+      $('.file-select .title .refresh').click(function() {
+        $('#getDir').html('');
+        var _ft = $('#getDir').data('fileTree');
+        _ft.showTree($('#getDir'), _ft.options.root, function() {
+          return _ft._trigger('filetreeinitiated', {});
+        })
+        $('i', this).attr('class', 'fa fa-refresh fa-spin');
+      })
+
 
       // videojs can only play the online video service, so do it.
       $("#showPath button").click(function() {
